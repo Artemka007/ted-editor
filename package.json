@@ -1,0 +1,30 @@
+{
+  "name": "ted-editor",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "https://github.com/Artemka007/ted-editor#readme",
+  "bugs": {
+    "url": "https://github.com/Artemka007/ted-editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artemka007/ted-editor.git"
+  },
+  "license": "ISC",
+  "author": "Artem Kopylov",
+  "type": "commonjs",
+  "main": "''",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.2.0",
+    "jest": "^30.4.2",
+    "node": "^26.7.0",
+    "prettier": "^3.9.6",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2",
+    "ts-jest": "^29.4.12"
+  }
+}
