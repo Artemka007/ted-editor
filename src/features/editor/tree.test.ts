@@ -1,4 +1,3 @@
-import { mocked } from 'jest-mock';
 import { sumTreeSpec } from './tree';
 
 const simpleString = 'Hell\no wor\nld\n!';

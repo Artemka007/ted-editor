@@ -1,5 +1,5 @@
-import { TreeSpec, Item, ISumTree } from "./interfaces";
-import { TextSummary } from "./types";
+import { Internal } from "./item";
+import { TreeSpec, Item, ISumTree, TextSummary } from "./types";
 
 export const sumTreeSpec: TreeSpec<String, TextSummary> = {
   default: () => ({
@@ -47,8 +47,18 @@ export const sumTreeSpec: TreeSpec<String, TextSummary> = {
 export class SumTree<T, S, V> implements ISumTree<S, T> {
   // private _root: T;
   private _spec: TreeSpec<V, S>;
+  private _root: Item;
 
   constructor(spec: TreeSpec<V, S>) {
     this._spec = spec;
+    this._root = new Internal();
+  }
+
+  open(fileName: string): void {
+    
+  }
+
+  private _appendChunk(chunk: string) {
+
   }
 }
