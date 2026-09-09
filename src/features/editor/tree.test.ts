@@ -1,4 +1,4 @@
-import { sumTreeSpec } from './tree';
+import { sumTreeSpec } from './spec';
 
 const simpleString = 'Hell\no wor\nld\n!';
 const emptyString = '';

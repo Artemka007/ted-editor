@@ -13,29 +13,14 @@ export type TextSummary = {
   longestRowChars: number,
 }
 
-export type ISumTree<T, S> = {
-  open(cfileName: string): void;
-}
-
 /**
  * An interface describing accumulation functions over a SumTree.
  * T is type of the node value, S is summary, 
  */
-export type TreeSpec<V, S> = {
+export type TreeSpec<T, S> = {
   default: () => S;
-  summary: (value: V) => S;
+  summary: (value: T) => S;
   combine: (leftSumary: S, rightSummary: S) => S;
-}
-
-export type Item = {
-  type: ItemType.INTERNAL;
-  get height(): number;
-  get childSummaries(): TextSummary[];
-  get childTrees(): ISumTree<Item, TextSummary>[];
-} | {
-  type: ItemType.LEAF;
-  get summary(): TextSummary;
-  get value(): string;
 }
 
 export type Point = {
