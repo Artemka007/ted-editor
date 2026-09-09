@@ -41,4 +41,16 @@ export const sumTreeSpec: TreeSpec<string, TextSummary> = {
       ),
     }
   },
+
+  size: (value) => {
+    return value.length;
+  },
+  concat: (a, b) => {
+    return a + b;
+  },
+  split: (value, at) => {
+    const t = value.slice(at);
+    return [t[0], t[1]];
+  },
+  maxSize: 4
 }

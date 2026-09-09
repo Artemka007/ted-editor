@@ -2,11 +2,11 @@ import { ItemType } from "./enums";
 import { Internal, Item } from "./item";
 import { TextSummary, TreeSpec } from "./types";
 
-export function combineMultiple(spec: TreeSpec<string, TextSummary>, ...summaries: TextSummary[]) {
+export function combineMultiple<T, S>(spec: TreeSpec<T, S>, ...summaries: S[]) {
   return summaries.reduce((acc, next) => spec.combine(acc, next), spec.default());
 }
 
-export function* collapseItems(spec: TreeSpec<string, TextSummary>, items: Item[]) {
+export function* collapseItems<T, S>(spec: TreeSpec<T, S>, items: Item<T, S>[]) {
   for (let i = 0; i < items.length; i+=4) {
     const insertItems = items.slice(i, i + 4);
     const height = insertItems[0].type === ItemType.INTERNAL ? insertItems[0].height + 1 : 1;
@@ -14,7 +14,7 @@ export function* collapseItems(spec: TreeSpec<string, TextSummary>, items: Item[
   }
 };
 
-export function travers(item: Item) {
+export function travers<T, S>(item: Item<T, S>) {
   if (item.type === ItemType.LEAF) {
     console.log('Leaf: ', item.value);
     return;

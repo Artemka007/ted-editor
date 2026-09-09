@@ -1,7 +1,7 @@
 import { Point, TextSummary } from "./types";
 
 
-interface Dimension<S, D> {
+export interface Dimension<S, D> {
   zero: () => D;
   addSummary: (acc: D, summary: S) => D;
   compute: (left: D, right: D) => number;
@@ -9,7 +9,7 @@ interface Dimension<S, D> {
 
 export const PointDimension: Dimension<TextSummary, Point> = {
   zero: () => ({row: 0, col: 0}),
-  addSummary: (acc, summary) => ({ row: acc.row + summary.lines.row, col: acc.col + summary.lines.col }),
+  addSummary: (acc, summary) => ({ row: acc.row + summary.linesCount, col: acc.col + summary.len }),
   compute: (left, right) => left.row - right.row || left.col - right.col
 }
 

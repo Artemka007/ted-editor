@@ -2,10 +2,10 @@ import { Internal, InternalItem } from "./item";
 import { ISumTree } from "./interfaces";
 import { TextSummary, TreeSpec } from "./types";
 
-export class SumTree implements ISumTree {
-  private _root: InternalItem;
+export class SumTree<T, S> implements ISumTree<T, S> {
+  private _root: InternalItem<T, S>;
 
-  constructor(spec: TreeSpec<string, TextSummary>) {
+  constructor(spec: TreeSpec<T, S>) {
     this._root = new Internal(spec);
   }
 

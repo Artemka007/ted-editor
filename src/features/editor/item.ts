@@ -3,48 +3,48 @@ import { TextSummary, TreeSpec } from "./types";
 import { ItemType } from "./enums";
 import { combineMultiple } from "./utils";
 
-export interface InternalItem {
+export interface InternalItem<T, S> {
   type: ItemType.INTERNAL;
 
   get height(): number;
-  get childSummaries(): TextSummary[];
-  get childTrees(): Item[];
-  get firstChild(): Item | null;
-  get lastChild(): Item | null;
-  get summary(): TextSummary;
+  get childSummaries(): S[];
+  get childTrees(): Item<T, S>[];
+  get firstChild(): Item<T, S> | null;
+  get lastChild(): Item<T, S> | null;
+  get summary(): S;
   get empty(): boolean;
 } 
 
-export interface LeafItem {
+export interface LeafItem<T, S> {
   type: ItemType.LEAF;
 
-  get summary(): TextSummary;
-  get value(): string;
+  get summary(): S;
+  get value(): T;
   get height(): number;
   get empty(): boolean;
 }
 
-export type Item = InternalItem | LeafItem;
+export type Item<T, S> = InternalItem<T, S> | LeafItem<T, S>;
 
-export class Internal implements InternalItem {
+export class Internal<T, S> implements InternalItem<T, S> {
   type: ItemType.INTERNAL = ItemType.INTERNAL;
 
   get height(): number {
     return this._height;
   }
-  get childSummaries(): TextSummary[] {
+  get childSummaries(): S[] {
     return this._childSummaries;
   }
-  get childTrees(): Item[] {
+  get childTrees(): Item<T, S>[] {
     return this._childTrees;
   }
-  get lastChild(): Item | null {
+  get lastChild(): Item<T, S> | null {
     return this._childTrees[this._childTrees.length - 1] ?? null;
   }
-  get firstChild(): Item | null {
+  get firstChild(): Item<T, S> | null {
     return this._childTrees[0] ?? null;
   }
-  get summary(): TextSummary {
+  get summary(): S {
     return this._summary;
   }
   get empty(): boolean {
@@ -52,14 +52,14 @@ export class Internal implements InternalItem {
   }
   
   private _height: number;
-  private _childSummaries: TextSummary[];
-  private _childTrees: Item[];
-  private _summary: TextSummary;
+  private _childSummaries: S[];
+  private _childTrees: Item<T, S>[];
+  private _summary: S;
 
   constructor(
-    spec: TreeSpec<string, TextSummary>,
+    spec: TreeSpec<T, S>,
     height: number = 0, 
-    childTrees: Item[] = []
+    childTrees: Item<T, S>[] = []
   ) {
     this._height = height;
     this._childTrees = childTrees;
@@ -68,7 +68,7 @@ export class Internal implements InternalItem {
   }
 }
 
-export class Leaf implements LeafItem {
+export class Leaf<T, S> implements LeafItem<T, S> {
   type: ItemType.LEAF = ItemType.LEAF;
 
   get summary() {
@@ -81,17 +81,17 @@ export class Leaf implements LeafItem {
     return 0;
   }
   get empty(): boolean {
-    return this._value.length === 0;
+    return String(this._value).length === 0;
   }
 
   constructor(
-    value: string, 
-    summary: TextSummary , 
+    value: T, 
+    summary: S , 
   ) {
     this._value = value;
     this._summary = summary;
   }
 
-  private _value: string;
-  private _summary: TextSummary;
+  private _value: T;
+  private _summary: S;
 }

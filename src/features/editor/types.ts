@@ -21,6 +21,11 @@ export type TreeSpec<T, S> = {
   default: () => S;
   summary: (value: T) => S;
   combine: (leftSumary: S, rightSummary: S) => S;
+
+  size: (value: T) => number;
+  concat: (a: T, b: T) => T;
+  split: (value: T, at: number) => [T, T];
+  maxSize: number;
 }
 
 export type Point = {
