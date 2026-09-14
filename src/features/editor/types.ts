@@ -1,3 +1,5 @@
+import { InternalItem, LeafItem } from "./interfaces";
+
 export type TextSummary = {
   /** Characters count */
   len: number,
@@ -32,3 +34,12 @@ export type Point = {
   row: number;
   col: number;
 }
+
+export type Item<T, S> = InternalItem<T, S> | LeafItem<T, S>;
+
+export type JoinResult<T, S> = [Item<T, S>] | [Item<T, S>, Item<T, S>];
+
+export type SeekResult<T, S, D> = {
+  leaf: LeafItem<T, S> | null;
+  start: D;
+};

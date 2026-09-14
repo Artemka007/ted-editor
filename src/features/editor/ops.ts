@@ -1,15 +1,15 @@
 import { CHUNK_MAX, TREE_BASE } from "./constants";
 import { Dimension } from "./dimension";
-import { ItemType } from "./enums";
-import { Internal, Item, Leaf, LeafItem } from "./item";
-import { TextSummary, TreeSpec } from "./types";
+import { Bias, ItemType } from "./enums";
+import { LeafItem } from "./interfaces";
+import { Internal, Leaf } from "./item";
+import { Item, JoinResult, SeekResult, TreeSpec } from "./types";
 import { assertError, collapseItems } from "./utils";
 
-type JoinResult<T, S> = [Item<T, S>] | [Item<T, S>, Item<T, S>];
 
 export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
   if (chunks.length === 0) {
-    return [];
+    return new Internal<T, S>(spec);
   }
 
   let height = 0;
@@ -24,7 +24,7 @@ export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
   return items[0];
 };
 
-export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>) => {
+export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>): Item<T, S> => {
   if (a.empty && b.empty) return new Internal(spec);
   if (a.empty) return b;
   if (b.empty) return a;
@@ -34,8 +34,52 @@ export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>) 
   return roots?.length === 1 ? roots[0] : new Internal(spec, roots[0].height + 1, roots);
 };
 
-export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D) => {
+// export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D): Item<T, S> => {
   
+// };
+
+export const seek = <T, S, D>(dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias): SeekResult<T, S, D> => {
+  const rootDim = dim.addSummary(dim.zero(), root.summary);
+
+  if (dim.сompare(target, rootDim) > 0) {
+    console.log("DEBUG: ", "target: ", target, ", rootDim: ", rootDim, "  outside dimension");
+    return { leaf: null, start: rootDim };
+  }
+
+  if (dim.сompare(target, dim.zero()) < 0) {
+    console.log("DEBUG: ", "target: ", target, ", less than zero");
+    return { leaf: null, start: dim.zero() };
+  }
+
+  let acc = dim.zero();
+  const items: [Item<T, S>, number][] = [[root, 0]];
+
+  while (items.length) {
+    const [nextItem, curr] = items[items.length - 1];
+
+    if (nextItem.type === ItemType.LEAF) {
+      return { leaf: nextItem, start: acc };
+    }
+    if (nextItem.childTrees.length <= curr + 1) {
+      console.log("DEBUG: ", "itemLength: ", nextItem.childTrees.length, ", item overvolume");
+      items.pop();
+      continue;
+    }
+    const next = dim.addSummary(acc, nextItem.childTrees[curr].summary);
+    const comp = dim.сompare(next, target);
+    console.log("DEBUG: ", "comp: ", comp, ", item overvolume");
+
+    if (comp < 0 || (comp === 0 && bias === Bias.LEFT)) {
+      acc = next;
+      items[items.length - 1][1]++;
+      continue;
+    }
+
+    items.push([nextItem.childTrees[curr], 0]);
+  }
+
+  console.log("DEBUG: ", "acc: ", acc, ", nothing to find");
+  return { leaf: null, start: acc };
 };
 
 const joinLeaves = <T, S>(

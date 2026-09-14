@@ -1,6 +1,6 @@
 import { ItemType } from "./enums";
-import { Internal, Item } from "./item";
-import { TextSummary, TreeSpec } from "./types";
+import { Internal } from "./item";
+import { Item, TreeSpec } from "./types";
 
 export function combineMultiple<T, S>(spec: TreeSpec<T, S>, ...summaries: S[]) {
   return summaries.reduce((acc, next) => spec.combine(acc, next), spec.default());

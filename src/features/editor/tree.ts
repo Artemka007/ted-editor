@@ -1,5 +1,5 @@
-import { Internal, InternalItem } from "./item";
-import { ISumTree } from "./interfaces";
+import { Internal } from "./item";
+import { InternalItem, ISumTree } from "./interfaces";
 import { TextSummary, TreeSpec } from "./types";
 
 export class SumTree<T, S> implements ISumTree<T, S> {

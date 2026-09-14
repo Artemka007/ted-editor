@@ -4,10 +4,10 @@ import { Point, TextSummary } from "./types";
 export interface Dimension<S, D> {
   zero: () => D;
   addSummary: (acc: D, summary: S) => D;
-  compute: (left: D, right: D) => number;
+  сompare: (next: D, target: D) => number;
 }
 
-export const PointDimension: Dimension<TextSummary, Point> = {
+export const pointDimension: Dimension<TextSummary, Point> = {
   zero: () => ({row: 0, col: 0}),
   addSummary: (acc, summary) => ({ 
     row: acc.row + summary.linesCount, 
@@ -15,11 +15,11 @@ export const PointDimension: Dimension<TextSummary, Point> = {
       ? summary.lastLineChars 
       : acc.col + summary.lastLineChars 
   }),
-  compute: (left, right) => left.row - right.row || left.col - right.col
+  сompare: (next, target) => next.row - target.row || next.col - target.col,
 }
 
-export const OffsetDimension: Dimension<TextSummary, number> = {
+export const offsetDimension: Dimension<TextSummary, number> = {
   zero: () => 0,
   addSummary: (acc, summary) => acc + summary.len,
-  compute: (left, right) => left - right
+  сompare: (next, target) => next - target
 }

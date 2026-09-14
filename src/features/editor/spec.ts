@@ -49,9 +49,6 @@ export const sumTreeSpec: TreeSpec<string, TextSummary> = {
     return a + b;
   },
   split: (value, at) => {
-    if (at >= value.length) {
-      return [value];
-    }
     const t = value.slice(at);
     return [t[0], t[1]];
   },

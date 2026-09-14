@@ -1,30 +1,8 @@
-import { TextSummary, TreeSpec } from "./types";
+import { Item, TreeSpec } from "./types";
 
 import { ItemType } from "./enums";
 import { combineMultiple } from "./utils";
-
-export interface InternalItem<T, S> {
-  type: ItemType.INTERNAL;
-
-  get height(): number;
-  get childSummaries(): S[];
-  get childTrees(): Item<T, S>[];
-  get firstChild(): Item<T, S> | null;
-  get lastChild(): Item<T, S> | null;
-  get summary(): S;
-  get empty(): boolean;
-} 
-
-export interface LeafItem<T, S> {
-  type: ItemType.LEAF;
-
-  get summary(): S;
-  get value(): T;
-  get height(): number;
-  get empty(): boolean;
-}
-
-export type Item<T, S> = InternalItem<T, S> | LeafItem<T, S>;
+import { InternalItem, LeafItem } from "./interfaces";
 
 export class Internal<T, S> implements InternalItem<T, S> {
   type: ItemType.INTERNAL = ItemType.INTERNAL;
