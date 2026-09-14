@@ -27,3 +27,16 @@ export function travers<T, S>(item: Item<T, S>) {
 export function assertError(err: string, errorType?: ErrorConstructor) {
   return new (errorType || Error)(err);
 }
+
+export function* chunkify(text: string, size: number) {
+  let t = '';
+  for (let i = 0; i < text.length; i++) {
+    if (i > 0 && i % size === 0) {
+      let r = t;
+      t = '';
+      yield r;
+    }
+    t += text[i];
+  }
+  yield t;
+}

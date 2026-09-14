@@ -38,7 +38,7 @@ export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>):
   
 // };
 
-export const seek = <T, S, D>(dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias): SeekResult<T, S, D> => {
+export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias): SeekResult<T, S, D> => {
   const rootDim = dim.addSummary(dim.zero(), root.summary);
 
   if (dim.сompare(target, rootDim) > 0) {
@@ -58,7 +58,16 @@ export const seek = <T, S, D>(dim: Dimension<S, D>, root: Item<T, S>, target: D,
     const [nextItem, curr] = items[items.length - 1];
 
     if (nextItem.type === ItemType.LEAF) {
-      return { leaf: nextItem, start: acc };
+      let i = 0;
+      while (dim.addSummary(acc, spec.summary(spec.split(nextItem.value, i)[0])) < target) {
+        i++;
+      }
+      const s = spec.split(nextItem.value, i);
+      const newVal = s[1];
+      return { 
+        leaf: new Leaf(newVal, spec.summary(newVal)), 
+        start: dim.addSummary(acc, spec.summary(s[0])) 
+      };
     }
     if (nextItem.childTrees.length <= curr + 1) {
       console.log("DEBUG: ", "itemLength: ", nextItem.childTrees.length, ", item overvolume");
