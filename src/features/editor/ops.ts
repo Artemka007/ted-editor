@@ -8,8 +8,14 @@ import { assertError, collapseItems } from "./utils";
 type JoinResult<T, S> = [Item<T, S>] | [Item<T, S>, Item<T, S>];
 
 export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
+  if (chunks.length === 0) {
+    return [];
+  }
+
   let height = 0;
-  for (let n = chunks.length; n > 1; n = Math.ceil(n / TREE_BASE)) height++;
+  for (let n = chunks.length; n > 1; n = Math.ceil(n / TREE_BASE)) {
+    height++;
+  }
 
   let items: Item<T, S>[] = chunks.map(i => new Leaf<T, S>(i, spec.summary(i)));
   for (let i = 0; i < height; i++) {
@@ -26,6 +32,10 @@ export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>) 
   const roots = join(spec, a, b);
 
   return roots?.length === 1 ? roots[0] : new Internal(spec, roots[0].height + 1, roots);
+};
+
+export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D) => {
+  
 };
 
 const joinLeaves = <T, S>(

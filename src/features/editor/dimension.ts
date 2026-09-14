@@ -9,7 +9,12 @@ export interface Dimension<S, D> {
 
 export const PointDimension: Dimension<TextSummary, Point> = {
   zero: () => ({row: 0, col: 0}),
-  addSummary: (acc, summary) => ({ row: acc.row + summary.linesCount, col: acc.col + summary.len }),
+  addSummary: (acc, summary) => ({ 
+    row: acc.row + summary.linesCount, 
+    col: summary.linesCount > 0 
+      ? summary.lastLineChars 
+      : acc.col + summary.lastLineChars 
+  }),
   compute: (left, right) => left.row - right.row || left.col - right.col
 }
 
