@@ -34,57 +34,107 @@ export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>):
   return roots?.length === 1 ? roots[0] : new Internal(spec, roots[0].height + 1, roots);
 };
 
-// export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D): Item<T, S> => {
-  
-// };
+export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D, acc = dim.zero()): Item<T, S> => {
+  let base: Item<T, S> = new Internal(spec);
+  if (dim.compare(from, to) > 0) {
+    console.log('DEBUG: ', 'from outside to');
+    return base;
+  }
 
-export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias): SeekResult<T, S, D> => {
+  const end = dim.addSummary(acc, root.summary);
+  console.log('DEBUG: ', 'from: ', from, ', acc ', acc, ', end: ', end, ', to: ', to);
+
+  if (dim.compare(from, end) >= 0 || dim.compare(acc, to) >= 0 ) {
+    return base;
+  }
+
+  if (dim.compare(acc, from) >= 0 &&  dim.compare(to, end) >= 0) {
+    return root;
+  }
+
+  if (root.type === ItemType.LEAF) {
+    let i = 0;
+    let j = spec.size(root.value) - 1;
+    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, i)[0])), from) < 0) {
+      i++;
+    }
+    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, j)[1])), to) > 0) {
+      j--;
+    }
+    const newVal = spec.split(spec.split(root.value, i)[1], j - i)[0];
+    const newLeaf = new Leaf(newVal, spec.summary(newVal));
+    console.log('DEBUG: ', 'newLeaf.value: ', newLeaf.value);
+    return newLeaf;
+  }
+
+  for (let i = 0; i < root.childTrees.length; i++) {
+    base = merge(spec, base, slice(spec, root.childTrees[i], dim, from, to, acc));
+    acc = dim.addSummary(acc, root.childSummaries[i]);
+  }
+
+  console.log(base);
+
+  return base;
+};
+
+export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias = Bias.LEFT): SeekResult<T, S, D> => {
   const rootDim = dim.addSummary(dim.zero(), root.summary);
 
-  if (dim.сompare(target, rootDim) > 0) {
+  if (dim.compare(target, rootDim) > 0) {
     console.log("DEBUG: ", "target: ", target, ", rootDim: ", rootDim, "  outside dimension");
     return { leaf: null, start: rootDim };
   }
 
-  if (dim.сompare(target, dim.zero()) < 0) {
+  if (dim.compare(target, dim.zero()) < 0) {
     console.log("DEBUG: ", "target: ", target, ", less than zero");
     return { leaf: null, start: dim.zero() };
   }
 
   let acc = dim.zero();
-  const items: [Item<T, S>, number][] = [[root, 0]];
+  let nextItem = root;
 
-  while (items.length) {
-    const [nextItem, curr] = items[items.length - 1];
+  while (nextItem) {
+    console.log("DEBUG: ", "nextItem.summary: ", nextItem.summary);
 
     if (nextItem.type === ItemType.LEAF) {
       let i = 0;
-      while (dim.addSummary(acc, spec.summary(spec.split(nextItem.value, i)[0])) < target) {
+      let final = acc;
+      
+      while (
+        dim.compare(final, target) < 0
+      ) {
         i++;
+        final = dim.addSummary(
+          acc, 
+          spec.summary(
+            spec.split(nextItem.value, i)[0]
+          )
+        );
       }
-      const s = spec.split(nextItem.value, i);
-      const newVal = s[1];
+      const newVal = spec.split(nextItem.value, i)[1];
+      console.log("DEBUG: ", "nextItem.value: ", nextItem.value, ", i: ", i, ", target: ", target);
       return { 
         leaf: new Leaf(newVal, spec.summary(newVal)), 
-        start: dim.addSummary(acc, spec.summary(s[0])) 
+        start: acc
       };
     }
-    if (nextItem.childTrees.length <= curr + 1) {
-      console.log("DEBUG: ", "itemLength: ", nextItem.childTrees.length, ", item overvolume");
-      items.pop();
-      continue;
-    }
-    const next = dim.addSummary(acc, nextItem.childTrees[curr].summary);
-    const comp = dim.сompare(next, target);
-    console.log("DEBUG: ", "comp: ", comp, ", item overvolume");
+    let f = false;
+    for (let curr = 0; curr < nextItem.childTrees.length; curr++) {
+      const next = dim.addSummary(acc, nextItem.childTrees[curr].summary);
+      const comp = dim.compare(next, target);
+      console.log("DEBUG: ", "comp: ", comp);
 
-    if (comp < 0 || (comp === 0 && bias === Bias.LEFT)) {
+      if (comp > 0 || (comp === 0 && bias === Bias.LEFT)) {
+        nextItem = nextItem.childTrees[curr];
+        f = true;
+        break;
+      }
+
       acc = next;
-      items[items.length - 1][1]++;
-      continue;
     }
-
-    items.push([nextItem.childTrees[curr], 0]);
+    if (!f) {
+      break;
+    }
   }
 
   console.log("DEBUG: ", "acc: ", acc, ", nothing to find");
