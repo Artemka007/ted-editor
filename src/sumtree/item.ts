@@ -1,8 +1,29 @@
-import { Item, TreeSpec } from "./types";
-
 import { ItemType } from "./enums";
-import { combineMultiple } from "./utils";
-import { InternalItem, LeafItem } from "./interfaces";
+import { combineMultiple } from "./fold";
+import { TreeSpec } from "./spec";
+
+export interface InternalItem<T, S> {
+  type: ItemType.INTERNAL;
+
+  get height(): number;
+  get childSummaries(): S[];
+  get childTrees(): Item<T, S>[];
+  get firstChild(): Item<T, S> | null;
+  get lastChild(): Item<T, S> | null;
+  get summary(): S;
+  get empty(): boolean;
+}
+
+export interface LeafItem<T, S> {
+  type: ItemType.LEAF;
+
+  get summary(): S;
+  get value(): T;
+  get height(): number;
+  get empty(): boolean;
+}
+
+export type Item<T, S> = InternalItem<T, S> | LeafItem<T, S>;
 
 export class Internal<T, S> implements InternalItem<T, S> {
   type: ItemType.INTERNAL = ItemType.INTERNAL;
@@ -28,7 +49,7 @@ export class Internal<T, S> implements InternalItem<T, S> {
   get empty(): boolean {
     return this._childTrees.length === 0;
   }
-  
+
   private _height: number;
   private _childSummaries: S[];
   private _childTrees: Item<T, S>[];
@@ -36,7 +57,7 @@ export class Internal<T, S> implements InternalItem<T, S> {
 
   constructor(
     spec: TreeSpec<T, S>,
-    height: number = 0, 
+    height: number = 0,
     childTrees: Item<T, S>[] = []
   ) {
     this._height = height;
@@ -63,8 +84,8 @@ export class Leaf<T, S> implements LeafItem<T, S> {
   }
 
   constructor(
-    value: T, 
-    summary: S , 
+    value: T,
+    summary: S ,
   ) {
     this._value = value;
     this._summary = summary;

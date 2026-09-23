@@ -1,7 +1,5 @@
-import { pointDimension } from "./src/features/editor/dimension";
-import { build, seek, slice } from "./src/features/editor/ops";
-import { sumTreeSpec } from "./src/features/editor/spec";
-import { chunkify, travers } from "./src/features/editor/utils";
+import { build, seek, slice } from "./src/sumtree";
+import { chunkify, pointDimension, sumTreeSpec } from "./src/text";
 
 const text = '1234\n56678\n1011\n'.repeat(10000000);
 const chunks = chunkify(text, 32).toArray();

@@ -1,8 +1,6 @@
-import { pointDimension } from "./dimension";
-import { Bias } from "./enums";
-import { build, seek } from "./ops";
-import { sumTreeSpec } from "./spec";
-import { chunkify, travers } from "./utils";
+import { chunkify, pointDimension, sumTreeSpec } from '../text';
+import { Bias } from './enums';
+import { build, seek } from './ops';
 
 const text = '0123456789';
 const multiLineText = '012\n3456\n789\nabcdefg\nh';

@@ -1,4 +1,6 @@
-import { TextSummary, TreeSpec } from "./types";
+import type { TreeSpec } from "../sumtree";
+import { CHUNK_MAX } from "./chunk";
+import { TextSummary } from "./summary";
 
 export const sumTreeSpec: TreeSpec<string, TextSummary> = {
   default: () => ({
@@ -29,14 +31,14 @@ export const sumTreeSpec: TreeSpec<string, TextSummary> = {
       linesCount: leftSummary.linesCount + rightSummary.linesCount,
       firstLineChars: leftSummary.firstLineChars + (leftSummary.linesCount === 0 ? rightSummary.firstLineChars : 0),
       lastLineChars: rightSummary.lastLineChars + (rightSummary.linesCount === 0 ? leftSummary.lastLineChars : 0),
-      longestRow: middleLineLenChars > leftSummary.longestRowChars && middleLineLenChars > rightSummary.longestRowChars 
+      longestRow: middleLineLenChars > leftSummary.longestRowChars && middleLineLenChars > rightSummary.longestRowChars
         ? leftSummary.linesCount
-        : leftSummary.longestRowChars >= rightSummary.longestRowChars 
+        : leftSummary.longestRowChars >= rightSummary.longestRowChars
           ? leftSummary.longestRow
           : rightSummary.longestRow + leftSummary.linesCount,
       longestRowChars: Math.max(
-        leftSummary.longestRowChars, 
-        rightSummary.longestRowChars, 
+        leftSummary.longestRowChars,
+        rightSummary.longestRowChars,
         middleLineLenChars
       ),
     }
@@ -51,5 +53,5 @@ export const sumTreeSpec: TreeSpec<string, TextSummary> = {
   split: (value, at) => {
     return [value.slice(0, at), value.slice(at)];
   },
-  maxSize: 4
+  maxSize: CHUNK_MAX
 }

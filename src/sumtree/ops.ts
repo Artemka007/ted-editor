@@ -1,11 +1,17 @@
-import { CHUNK_MAX, TREE_BASE } from "./constants";
+import { TREE_BASE } from "./constants";
 import { Dimension } from "./dimension";
 import { Bias, ItemType } from "./enums";
-import { LeafItem } from "./interfaces";
-import { Internal, Leaf } from "./item";
-import { Item, JoinResult, SeekResult, TreeSpec } from "./types";
-import { assertError, collapseItems } from "./utils";
+import { assertError } from "./invariant";
+import { Internal, Item, Leaf, LeafItem } from "./item";
+import { TreeSpec } from "./spec";
 
+/** Результат `join`: один узел, либо два, если на этом уровне случилось переполнение. */
+type JoinResult<T, S> = [Item<T, S>] | [Item<T, S>, Item<T, S>];
+
+export type SeekResult<T, S, D> = {
+  leaf: LeafItem<T, S> | null;
+  start: D;
+};
 
 export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
   if (chunks.length === 0) {
@@ -25,8 +31,8 @@ export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
 };
 
 export const merge = <T, S>(
-  spec: TreeSpec<T, S>, 
-  a: Item<T, S>, 
+  spec: TreeSpec<T, S>,
+  a: Item<T, S>,
   b: Item<T, S>
 ): Item<T, S> => {
   if (a.empty && b.empty) return new Internal(spec);
@@ -39,11 +45,11 @@ export const merge = <T, S>(
 };
 
 export const slice = <T, S, D>(
-  spec: TreeSpec<T, S>, 
-  root: Item<T, S>, 
-  dim: Dimension<S, D>, 
-  from: D, 
-  to: D, 
+  spec: TreeSpec<T, S>,
+  root: Item<T, S>,
+  dim: Dimension<S, D>,
+  from: D,
+  to: D,
   acc = dim.zero()
 ): Item<T, S> => {
   let base: Item<T, S> = new Internal(spec);
@@ -85,10 +91,10 @@ export const slice = <T, S, D>(
 };
 
 export const seek = <T, S, D>(
-  spec: TreeSpec<T, S>, 
-  dim: Dimension<S, D>, 
-  root: Item<T, S>, 
-  target: D, 
+  spec: TreeSpec<T, S>,
+  dim: Dimension<S, D>,
+  root: Item<T, S>,
+  target: D,
   bias: Bias = Bias.LEFT
 ): SeekResult<T, S, D> => {
   const rootDim = dim.addSummary(dim.zero(), root.summary);
@@ -108,21 +114,21 @@ export const seek = <T, S, D>(
     if (nextItem.type === ItemType.LEAF) {
       let i = 0;
       let final = acc;
-      
+
       while (
         dim.compare(final, target) < 0
       ) {
         i++;
         final = dim.addSummary(
-          acc, 
+          acc,
           spec.summary(
             spec.split(nextItem.value, i)[0]
           )
         );
       }
       const newVal = spec.split(nextItem.value, i)[1];
-      return { 
-        leaf: new Leaf(newVal, spec.summary(newVal)), 
+      return {
+        leaf: new Leaf(newVal, spec.summary(newVal)),
         start: acc
       };
     }
@@ -148,9 +154,9 @@ export const seek = <T, S, D>(
 };
 
 export const splitAt = <T, S, D>(
-  spec: TreeSpec<T, S>, 
-  root: Item<T, S>, 
-  dim: Dimension<S, D>, 
+  spec: TreeSpec<T, S>,
+  root: Item<T, S>,
+  dim: Dimension<S, D>,
   at: D
 ): [Item<T, S>, Item<T, S>] => {
   const zero = dim.zero();
@@ -162,14 +168,22 @@ export const splitAt = <T, S, D>(
   ];
 };
 
+function* collapseItems<T, S>(spec: TreeSpec<T, S>, items: Item<T, S>[]) {
+  for (let i = 0; i < items.length; i += TREE_BASE) {
+    const insertItems = items.slice(i, i + TREE_BASE);
+    const height = insertItems[0].type === ItemType.INTERNAL ? insertItems[0].height + 1 : 1;
+    yield new Internal(spec, height, insertItems);
+  }
+};
+
 const joinLeaves = <T, S>(
-  spec: TreeSpec<T, S>, 
-  a: LeafItem<T, S>, 
+  spec: TreeSpec<T, S>,
+  a: LeafItem<T, S>,
   b: LeafItem<T, S>
 ): JoinResult<T, S> => {
   const res = spec.concat(a.value, b.value);
 
-  if (spec.size(res) <= CHUNK_MAX) {
+  if (spec.size(res) <= spec.maxSize) {
     return [new Leaf(res, spec.summary(res))];
   }
 
@@ -183,14 +197,14 @@ const joinLeaves = <T, S>(
 };
 
 const pack = <T, S>(
-  spec: TreeSpec<T, S>, 
+  spec: TreeSpec<T, S>,
   children: Item<T, S>[]
 ): JoinResult<T, S> => {
   if (children.length <= TREE_BASE) {
     return [
       new Internal<T, S>(
         spec,
-        (children[0]?.height || 0) + 1, 
+        (children[0]?.height || 0) + 1,
         children
       )
     ];
@@ -198,13 +212,13 @@ const pack = <T, S>(
   const splitPoint = Math.trunc(children.length / 2) + children.length % 2;
   return [
     new Internal<T, S>(
-      spec, 
-      (children[0]?.height || 0) + 1, 
+      spec,
+      (children[0]?.height || 0) + 1,
       children.slice(0, splitPoint)
     ),
     new Internal<T, S>(
       spec,
-      (children[0]?.height || 0) + 1, 
+      (children[0]?.height || 0) + 1,
       children.slice(splitPoint)
     )
   ];
@@ -212,7 +226,7 @@ const pack = <T, S>(
 
 const join = <T, S>(
   spec: TreeSpec<T, S>,
-  a: Item<T, S>, 
+  a: Item<T, S>,
   b: Item<T, S>
 ): JoinResult<T, S> => {
   if (a.height === b.height) {
