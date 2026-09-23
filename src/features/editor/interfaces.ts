@@ -1,10 +1,6 @@
 import { ItemType } from "./enums";
 import { Item } from "./types";
 
-export interface ISumTree<T, S> {
-  open(fileName: string): void;
-};
-
 export interface InternalItem<T, S> {
   type: ItemType.INTERNAL;
 
