@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
     "esModuleInterop": true,
-    "types": ["node", "jest"],
-  }
+    "strict": true,
+    "outDir": "dist",
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*", "index.ts"]
 }

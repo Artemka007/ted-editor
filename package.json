@@ -13,13 +13,16 @@
   "license": "ISC",
   "author": "Artem Kopylov",
   "type": "commonjs",
-  "main": "''",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "start": "tsx index.ts"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^26.2.0",
+    "fast-check": "^4.10.2",
     "jest": "^30.4.2",
     "node": "^26.7.0",
     "prettier": "^3.9.6",
