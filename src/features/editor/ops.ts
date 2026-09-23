@@ -24,7 +24,11 @@ export const build = <T, S>(spec: TreeSpec<T, S>, chunks: T[]) => {
   return items[0];
 };
 
-export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>): Item<T, S> => {
+export const merge = <T, S>(
+  spec: TreeSpec<T, S>, 
+  a: Item<T, S>, 
+  b: Item<T, S>
+): Item<T, S> => {
   if (a.empty && b.empty) return new Internal(spec);
   if (a.empty) return b;
   if (b.empty) return a;
@@ -34,7 +38,14 @@ export const merge = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>):
   return roots?.length === 1 ? roots[0] : new Internal(spec, roots[0].height + 1, roots);
 };
 
-export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dimension<S, D>, from: D, to: D, acc = dim.zero()): Item<T, S> => {
+export const slice = <T, S, D>(
+  spec: TreeSpec<T, S>, 
+  root: Item<T, S>, 
+  dim: Dimension<S, D>, 
+  from: D, 
+  to: D, 
+  acc = dim.zero()
+): Item<T, S> => {
   let base: Item<T, S> = new Internal(spec);
   if (dim.compare(from, to) > 0) {
     console.log('DEBUG: ', 'from outside to');
@@ -42,7 +53,6 @@ export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dime
   }
 
   const end = dim.addSummary(acc, root.summary);
-  console.log('DEBUG: ', 'from: ', from, ', acc ', acc, ', end: ', end, ', to: ', to);
 
   if (dim.compare(from, end) >= 0 || dim.compare(acc, to) >= 0 ) {
     return base;
@@ -55,15 +65,14 @@ export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dime
   if (root.type === ItemType.LEAF) {
     let i = 0;
     let j = spec.size(root.value) - 1;
-    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, i)[0])), from) < 0) {
+    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, i)[0])), from) < 0 && i < spec.size(root.value)) {
       i++;
     }
-    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, j)[1])), to) > 0) {
+    while (dim.compare(dim.addSummary(acc, spec.summary(spec.split(root.value, j)[1])), to) > 0 && j >= 0) {
       j--;
     }
     const newVal = spec.split(spec.split(root.value, i)[1], j - i)[0];
     const newLeaf = new Leaf(newVal, spec.summary(newVal));
-    console.log('DEBUG: ', 'newLeaf.value: ', newLeaf.value);
     return newLeaf;
   }
 
@@ -72,21 +81,23 @@ export const slice = <T, S, D>(spec: TreeSpec<T, S>, root: Item<T, S>, dim: Dime
     acc = dim.addSummary(acc, root.childSummaries[i]);
   }
 
-  console.log(base);
-
   return base;
 };
 
-export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: Item<T, S>, target: D, bias: Bias = Bias.LEFT): SeekResult<T, S, D> => {
+export const seek = <T, S, D>(
+  spec: TreeSpec<T, S>, 
+  dim: Dimension<S, D>, 
+  root: Item<T, S>, 
+  target: D, 
+  bias: Bias = Bias.LEFT
+): SeekResult<T, S, D> => {
   const rootDim = dim.addSummary(dim.zero(), root.summary);
 
   if (dim.compare(target, rootDim) > 0) {
-    console.log("DEBUG: ", "target: ", target, ", rootDim: ", rootDim, "  outside dimension");
     return { leaf: null, start: rootDim };
   }
 
   if (dim.compare(target, dim.zero()) < 0) {
-    console.log("DEBUG: ", "target: ", target, ", less than zero");
     return { leaf: null, start: dim.zero() };
   }
 
@@ -94,8 +105,6 @@ export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: 
   let nextItem = root;
 
   while (nextItem) {
-    console.log("DEBUG: ", "nextItem.summary: ", nextItem.summary);
-
     if (nextItem.type === ItemType.LEAF) {
       let i = 0;
       let final = acc;
@@ -112,7 +121,6 @@ export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: 
         );
       }
       const newVal = spec.split(nextItem.value, i)[1];
-      console.log("DEBUG: ", "nextItem.value: ", nextItem.value, ", i: ", i, ", target: ", target);
       return { 
         leaf: new Leaf(newVal, spec.summary(newVal)), 
         start: acc
@@ -122,7 +130,6 @@ export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: 
     for (let curr = 0; curr < nextItem.childTrees.length; curr++) {
       const next = dim.addSummary(acc, nextItem.childTrees[curr].summary);
       const comp = dim.compare(next, target);
-      console.log("DEBUG: ", "comp: ", comp);
 
       if (comp > 0 || (comp === 0 && bias === Bias.LEFT)) {
         nextItem = nextItem.childTrees[curr];
@@ -137,8 +144,22 @@ export const seek = <T, S, D>(spec: TreeSpec<T, S>, dim: Dimension<S, D>, root: 
     }
   }
 
-  console.log("DEBUG: ", "acc: ", acc, ", nothing to find");
   return { leaf: null, start: acc };
+};
+
+export const splitAt = <T, S, D>(
+  spec: TreeSpec<T, S>, 
+  root: Item<T, S>, 
+  dim: Dimension<S, D>, 
+  at: D
+): [Item<T, S>, Item<T, S>] => {
+  const zero = dim.zero();
+  const total = dim.addSummary(zero, root.summary);
+
+  return [
+    slice(spec, root, dim, zero, at),
+    slice(spec, root, dim, at, total),
+  ];
 };
 
 const joinLeaves = <T, S>(
@@ -161,7 +182,10 @@ const joinLeaves = <T, S>(
   ];
 };
 
-const pack = <T, S>(spec: TreeSpec<T, S>, children: Item<T, S>[]): JoinResult<T, S> => {
+const pack = <T, S>(
+  spec: TreeSpec<T, S>, 
+  children: Item<T, S>[]
+): JoinResult<T, S> => {
   if (children.length <= TREE_BASE) {
     return [
       new Internal<T, S>(
@@ -186,7 +210,11 @@ const pack = <T, S>(spec: TreeSpec<T, S>, children: Item<T, S>[]): JoinResult<T,
   ];
 };
 
-const join = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>): JoinResult<T, S> => {
+const join = <T, S>(
+  spec: TreeSpec<T, S>,
+  a: Item<T, S>, 
+  b: Item<T, S>
+): JoinResult<T, S> => {
   if (a.height === b.height) {
     if (a.type === ItemType.LEAF && b.type === ItemType.LEAF) {
       return joinLeaves(spec, a, b);
@@ -204,6 +232,5 @@ const join = <T, S>(spec: TreeSpec<T, S>, a: Item<T, S>, b: Item<T, S>): JoinRes
     const head = join(spec, a, b.firstChild);
     return pack(spec, [...head, ...b.childTrees.slice(1)]);
   }
-  // todo: add cases when join can be crashed
   throw assertError("Join crashed");
 };
